@@ -10,3 +10,6 @@ DOMAIN-SUFFIX,anyfeeder.com
 DOMAIN-SUFFIX,it-tools.tech
 #speedtest-tracker
 DOMAIN-SUFFIX,speedtest-tracker.dev
+#Kobo漫画
+DOMAIN-SUFFIX,kox.moe
+DOMAIN-SUFFIX,mox.moe
