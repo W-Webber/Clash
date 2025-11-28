@@ -237,7 +237,7 @@ function clearCookieCache() {
         // 根据 URL 参数决定执行的操作
         const action = (typeof $argument !== "undefined" && $argument) ||  
                        'smart-check';
-        console.log(`远程脚本执行中。。。action: ${action}`);
+        console.log(`远程脚本执行中。。。action: ${action}, arg: ${$argument}`);
         switch (action) {
             case 'smart-check':
                 await smartConfigCheck();
