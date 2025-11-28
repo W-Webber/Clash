@@ -6,9 +6,9 @@ const $argument = "clear";
 (async () => {
   try {
     const resp = await $task.fetch({ url: remoteUrl });
-    console.log("============ begin ===========");
-    eval(resp.body);  // 远程脚本中可以直接用 REMOTE_ARG 这个变量
-    console.log("============ end  ===========");
+    // console.log("============ begin ===========");
+    eval(resp.body);
+    // console.log("============ end  ===========");
     //console.log(resp.body);
     //$done();
   } catch (e) {
