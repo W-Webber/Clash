@@ -69,7 +69,8 @@ surge:///write-persistent-store?key=ql_client_secret&value=YOUR_SECRET
             url: url,
             headers: {
                 'Content-Type': 'application/json'
-            }
+            },
+            _respType: 'all'
         });
         console.log(`jm ---------------- clientID: ${clientId}, secret: ${clientSecret}, body: ${response.body}`);
         const body = JSON.parse(response.body);
@@ -186,7 +187,8 @@ async function testConfig() {
             url: url,
             headers: {
                 'Content-Type': 'application/json'
-            }
+            },
+            _respType: 'all'
         });
 
         const body = JSON.parse(response.body);
