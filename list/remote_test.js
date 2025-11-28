@@ -233,8 +233,8 @@ function clearCookieCache() {
     try {
         console.log('远程脚本执行开始');
         // 根据 URL 参数决定执行的操作
-        const action = ($.isQuanX() && QX_ACTION) || 
-                       ($.isSurge() && $argument) || 
+        const action = ($.isQuanX() && typeof $QX_ACTION !== "undefined" && QX_ACTION) || 
+                       ($.isSurge() && typeof $argument !== "undefined" && $argument) || 
                        'smart-check';
         console.log(`远程脚本执行中。。。${$argument}, action: ${action}`);
         switch (action) {
