@@ -230,31 +230,37 @@ function clearCookieCache() {
 // ============= 主菜单 =============
 
 (async () => {
-    console.log('远程脚本执行开始');
-    // 根据 URL 参数决定执行的操作
-    const action = $argument || 'smart-check';
-    console.log(`远程脚本执行中。。。${$argument}, action: ${action}`);
-    switch (action) {
-        case 'smart-check':
-            await smartConfigCheck();
-            break;
-        case 'clear':
-            clearConfig();
-            break;
-        case 'clear-cache':
-            clearCookieCache();
-            break;
-        // 保留旧的操作以兼容
-        case 'show':
-        case 'wizard':
-        case 'test':
-            await smartConfigCheck();
-            break;
-        default:
-            $.msg('JD Cookie Sync', '未知操作', `不支持的操作: ${action}\n\n支持的操作: smart-check, clear, clear-cache`);
+    try {
+        console.log('远程脚本执行开始');
+        // 根据 URL 参数决定执行的操作
+        const action = $argument || 'smart-check';
+        console.log(`远程脚本执行中。。。${$argument}, action: ${action}`);
+        switch (action) {
+            case 'smart-check':
+                await smartConfigCheck();
+                break;
+            case 'clear':
+                clearConfig();
+                break;
+            case 'clear-cache':
+                clearCookieCache();
+                break;
+            // 保留旧的操作以兼容
+            case 'show':
+            case 'wizard':
+            case 'test':
+                await smartConfigCheck();
+                break;
+            default:
+                $.msg('JD Cookie Sync', '未知操作', `不支持的操作: ${action}\n\n支持的操作: smart-check, clear, clear-cache`);
+        }
+    } catch (error) {
+        console.log('远程脚本执行失败');
+        $.msg('JD Cookie Sync', '❌ 配置错误', `错误信息: ${error.message || error}`);
+    } finally {
+        console.log('远程脚本执行结束');
+        $.done();
     }
-
-    $.done({});
 })();
 
 // ============= Surge 环境适配 =============
