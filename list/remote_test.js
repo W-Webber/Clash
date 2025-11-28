@@ -236,7 +236,7 @@ function clearCookieCache() {
         const action = ($.isQuanX() && typeof $QX_ACTION !== "undefined" && QX_ACTION) || 
                        ($.isSurge() && typeof $argument !== "undefined" && $argument) || 
                        'smart-check';
-        console.log(`远程脚本执行中。。。${$argument}, action: ${action}`);
+        console.log(`远程脚本执行中。。。action: ${action}`);
         switch (action) {
             case 'smart-check':
                 await smartConfigCheck();
