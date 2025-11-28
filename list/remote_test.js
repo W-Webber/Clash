@@ -71,7 +71,7 @@ surge:///write-persistent-store?key=ql_client_secret&value=YOUR_SECRET
                 'Content-Type': 'application/json'
             }
         });
-
+        console.log(`jm ---------------- clientID: ${clientId}, secret: ${clientSecret}, body: ${response.body}`);
         const body = JSON.parse(response.body);
 
         if (body.code === 200 && body.data && body.data.token) {
