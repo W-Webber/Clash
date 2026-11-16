@@ -55,7 +55,10 @@ class ProfilesTest(unittest.TestCase):
                 self.assertTrue(rules[2].startswith(DOMESTIC + ','))
                 self.assertEqual(rules[-1], FINAL + ',[]FINAL')
                 self.assertEqual(sum(',[]FINAL' in x or ',[]MATCH' in x for x in rules), 1)
-                self.assertEqual(sum(x.startswith(DOMESTIC + ',') for x in rules), 1)
+                self.assertEqual(sum(x.startswith(DOMESTIC + ',') for x in rules), 2)
+                geoip_rules = [x for x in rules if ',[]GEOIP,' in x]
+                self.assertEqual(geoip_rules, [DOMESTIC + ',[]GEOIP,CN,no-resolve'])
+                self.assertEqual(rules[-2], geoip_rules[0])
 
     def test_client_specific_domestic_rules(self):
         for path in self.paths:

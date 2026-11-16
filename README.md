@@ -14,9 +14,10 @@ asdlokj1qpi23/subconverter forked from tindy2013/subconverter，区别是asdlokj
 1. 广告／屏蔽规则。
 2. 国内纯域名规则 → `➡️ 国内`（默认 `DIRECT`）。
 3. 原有服务及 IP 分流规则。
-4. `FINAL` → `🐟 漏网之鱼`（默认 `港台日新韩-自动`，也可手动选择 `DIRECT`）。
+4. `GEOIP,CN,no-resolve` → `➡️ 国内`，仅补充匹配已有真实目标 IP。
+5. `FINAL` → `🐟 漏网之鱼`（默认 `港台日新韩-自动`，也可手动选择 `DIRECT`）。
 
-国内规则在需要解析的 IP 规则前面；未被国内集合覆盖的域名仍会经过后续 IP 匹配，不能保证完全消除这部分解析延迟。兜底组只处理未命中的连接，不覆盖已经命中的服务规则。
+国内域名规则在需要解析的 IP 规则前面；服务规则之后、FINAL 之前增加 `ruleset=➡️ 国内,[]GEOIP,CN,no-resolve`。直接使用真实 IP 或前面的规则已经取得真实 IP 时，才按 GeoIP 数据库进行国内补充匹配；只有域名且尚无真实 IP 时，不为这条规则主动解析，继续进入漏网之鱼。此规则不会撤销前面的规则已经触发的解析，也不保证数据库完整。兜底组只处理未命中的连接，不覆盖已经命中的服务规则。
 
 | 配置文件 | 国内域名集合 | 目标 |
 | --- | --- | --- |
@@ -57,16 +58,30 @@ dns:
 
 上面是需要合并的 DNS 字段，保留实际配置的监听端口、Fake-IP 和 IPv6 设置，不是完整订阅。
 
-国内 DNS 使用阿里 DoH 并显式指定 `➡️ 国内`：组选择 DIRECT 时在本地查询，切为代理时查询也经过代理。不要将这个策略改成固定直连的运营商 DNS 后，再把国内组切到代理，否则国内域名查询仍会直连。阿里作为解析服务商仍能看到这些查询；节点／引导查询仍允许运营商 DNS 明文直连。
+上面的阿里 DoH 策略显式指定 `➡️ 国内`：组选择 DIRECT 时在本地查询，切为代理时查询也经过代理。阿里作为解析服务商仍能看到这些查询；节点／引导查询仍允许运营商 DNS 明文直连。
 
-`direct-nameserver` 仅处理最终选择 DIRECT 的出口解析；即使国内域名提前匹配，它也不能替代连接前 AAAA 查询使用的 nameserver-policy。未知域名和用于 IP 判断的普通解析仍使用 Cloudflare 代理 DNS。
+如果优先使用实测更快的运营商 DNS，并接受国内域名查询交给运营商，面板中的 Nameserver-Policy 也可以改为：
+
+```yaml
+"geosite:cn": ["202.102.224.68", "202.102.227.68"]
+```
+
+上述两种策略二选一。直接填写运营商 IP 的方案在当前 respect-rules: false 下不跟随国内组切换：即使把国内组切为代理，这些 DNS 查询仍直连。没有命中任何 DNS 策略的域名继续使用普通代理 Cloudflare nameserver。
+
+`direct-nameserver` 处理最终选择 DIRECT 后的出口解析。对于正常获得 Fake-IP、随后提前命中国内直连规则的连接，可以只使用 direct-nameserver 完成目标解析，不必再配置 nameserver-policy。新增 GEOIP 的 no-resolve 只控制这一条规则，不能让客户端的真实 DNS 查询或其他 IP 规则免于解析。
+
+此处保留 nameserver-policy，目的是让国内集合中的非 Fake-IP 查询也使用国内 DNS，例如被 fake-ip-filter 排除的域名、redir-host 模式或其他需要上游回答的查询。若接受这些查询仍使用普通代理 nameserver，可以在面板取消该策略；这属于简化配置与解析速度的取舍，并非 no-resolve 自动替代了策略。
+
+IPv6 注意：按当前 Mihomo 实现，对未被过滤的普通 Fake-IP 域名，缺少 IPv6 Fake-IP 地址池时 AAAA 返回空答案，而不是必然改查真实 IPv6。被 fake-ip-filter 排除的域名走真实解析流程，是否返回 AAAA 还受 dns.ipv6 控制。因此不能仅凭“IPv6 Fake-IP 停用”判断是否需要 nameserver-policy；应核对实际内核和最终 fake-ip-filter。开启大陆绕过时，OpenClash 还可能把国内集合加入真实解析的过滤规则。
+
+不配置 nameserver-policy 时，这些需要真实解析的查询仍走经过代理的 Cloudflare；保留策略则匹配国内集合后使用所选的阿里 DoH 或运营商 DNS。运营商 direct-nameserver 默认不遵循 nameserver-policy；不要误认为只要配置国内 DoH，直连出口就不会使用运营商 DNS。
 
 ### 优先级及切换注意事项
 
 - 国内集合中的域名优先进入 `➡️ 国内`，可能覆盖后面的 SteamCN、Apple Music 等服务组。需要强制使用专用组的域名，应放在国内规则之前，并给同一域名添加 DNS 策略例外；不要简单把含有会触发解析的 IP 规则的整个服务列表移到前面。
 - 国内组或兜底组切为代理，只影响真正进入 Mihomo 的流量。启用了 OpenClash“绕过中国大陆 IPv6”时，部分大陆 IPv6 连接可能在进入内核前就被放行；要让组切换对它们生效，需要同时调整 IPv6 绕过设置。仓库不自动更改此开关。
 - Quantumult X 的 DNS 配置由该客户端另行管理；同步 INI 分组不代表它自动应用 OpenClash 的 DNS 策略。
-- 转换后确认存在 `GEOSITE,cn,➡️ 国内`（Mihomo 模板）及末尾 `MATCH,🐟 漏网之鱼`；普通模板应展开为域名规则，不能出现 GEOSITE。
+- 转换后确认存在 `GEOSITE,cn,➡️ 国内`（Mihomo 模板），并以 `GEOIP,CN,➡️ 国内,no-resolve` 和 `MATCH,🐟 漏网之鱼` 结尾；普通 Clash 模板应展开国内域名规则，不能出现 GEOSITE。Quantumult X 使用其对应的 GEOIP / FINAL 语法，由 subconverter 转换。
 - 更新路由器时先转换订阅，再应用配套 DNS 设置，确认策略组名完全一致。本文未声称已在实际路由器上做过性能或泄露测试。
 
 ## 本地检查
